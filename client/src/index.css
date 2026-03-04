@@ -4,6 +4,6 @@
 
 @layer base {
   body {
-    @apply antialiased bg-institutional-light;
+    @apply antialiased bg-slate-50 text-slate-900;
   }
 }

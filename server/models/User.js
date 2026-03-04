@@ -8,7 +8,9 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: true, 
     enum: ['Administrador', 'Regente', 'Vendedor'] 
-  }
+  },
+  resetPasswordToken: { type: String },
+  resetPasswordExpire: { type: Date }
 });
 
 module.exports = mongoose.model('User', userSchema);

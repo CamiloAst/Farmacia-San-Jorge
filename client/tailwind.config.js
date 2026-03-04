@@ -6,11 +6,14 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+      },
       colors: {
-        institutional: {
-          light: '#e8f5e9', // very light green
-          DEFAULT: '#4caf50', // primary green
-          dark: '#388e3c', // dark green
+        corporate: {
+          light: '#f8fafc', // slate-50 background look
+          DEFAULT: '#2563eb', // blue-600 for accents
+          dark: '#172554', // blue-950 for structures/headers
         },
       }
     },
