@@ -26,11 +26,12 @@ mongoose.connect(MONGODB_URI)
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    });
+    
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB', err);
   });
+  app.use(express.static(path.join(__dirname, 'dist')));
+    app.get('/*', (req, res) => {
+      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    });
