@@ -10,7 +10,7 @@ const Dashboard = ({ user, token }) => {
 
   const fetchInventory = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/inventory/dispatch', {
+      const res = await axios.get('/api/inventory/dispatch', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setInventory(res.data);
@@ -21,7 +21,7 @@ const Dashboard = ({ user, token }) => {
 
   const fetchAlerts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/inventory/alerts', {
+      const res = await axios.get('/api/inventory/alerts', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAlerts(res.data);

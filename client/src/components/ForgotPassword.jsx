@@ -23,7 +23,7 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+      await axios.post('/api/auth/forgot-password', { email });
       setMessage('Te hemos enviado un correo electrónico con las instrucciones para restablecer tu contraseña. Revisa tu buzón o carpeta de spam.');
     } catch (err) {
       setError(err.response?.data?.message || 'Hubo un error al procesar la solicitud.');

@@ -12,7 +12,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await axios.post('/api/auth/login', { email, password });
       onLogin(res.data.token, res.data.user);
     } catch (err) {
       setError(err.response?.data?.message || 'Error al iniciar sesión');

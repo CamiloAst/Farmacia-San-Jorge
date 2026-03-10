@@ -20,7 +20,7 @@ const InventoryEntry = ({ token, onEntrySuccess }) => {
     setError('');
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/inventory/entry', formData, {
+      await axios.post('/api/inventory/entry', formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       onEntrySuccess();

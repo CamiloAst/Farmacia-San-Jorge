@@ -75,8 +75,9 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpire = Date.now() + 60 * 60 * 1000;
     await user.save();
 
-    // Create reset url
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    // Create reset url dynamically (supports both local React Dev Server and Production EC2)
+    const clientUrl = process.env.CLIENT_URL || req.headers.origin || `${req.protocol}://${req.get('host')}`;
+    const resetUrl = `${clientUrl}/reset-password/${resetToken}`;
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
