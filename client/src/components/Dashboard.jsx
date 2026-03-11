@@ -7,6 +7,10 @@ const Dashboard = ({ user, token }) => {
   const [inventory, setInventory] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [showEntryForm, setShowEntryForm] = useState(false);
+  
+  // Edit State
+  const [editingItem, setEditingItem] = useState(null);
+  const [editFormData, setEditFormData] = useState({ cantidad: '', fechaVencimiento: '' });
 
   const fetchInventory = async () => {
     try {
@@ -36,9 +40,51 @@ const Dashboard = ({ user, token }) => {
   }, [token]);
 
   const canEnterStock = user.rol === 'Regente' || user.rol === 'Administrador';
+  const isAdmin = user.rol === 'Administrador';
+
+  const handleDelete = async (id, nombreProducto) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el medicamento: ${nombreProducto}?`)) {
+      try {
+        await axios.delete(`/api/inventory/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        fetchInventory();
+        fetchAlerts();
+      } catch (err) {
+        alert(err.response?.data?.message || 'Error al eliminar');
+      }
+    }
+  };
+
+  const openEditModal = (item) => {
+    setEditingItem(item._id);
+    // Format date properly for the input type="date"
+    const formattedDate = new Date(item.fechaVencimiento).toISOString().split('T')[0];
+    setEditFormData({ 
+      cantidad: item.cantidad,
+      fechaVencimiento: formattedDate
+    });
+  };
+
+  const submitEdit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`/api/inventory/${editingItem}`, {
+        cantidad: Number(editFormData.cantidad),
+        fechaVencimiento: editFormData.fechaVencimiento
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEditingItem(null);
+      fetchInventory();
+      fetchAlerts();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Error al editar');
+    }
+  };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 relative">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Panel de Control</h1>
@@ -93,19 +139,19 @@ const Dashboard = ({ user, token }) => {
                     <th className="p-4 font-semibold border-b border-slate-200 text-right">Cantidad</th>
                     <th className="p-4 font-semibold border-b border-slate-200">Lote</th>
                     <th className="p-4 font-semibold border-b border-slate-200">Vencimiento</th>
-                    <th className="p-4 font-semibold border-b border-slate-200">Registro</th>
+                    {isAdmin && <th className="p-4 font-semibold border-b border-slate-200 text-center">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {inventory.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="p-8 text-center text-slate-400 italic bg-gray-50/50">
+                      <td colSpan={isAdmin ? "5" : "4"} className="p-8 text-center text-slate-400 italic bg-gray-50/50">
                         No hay inventario registrado en el sistema.
                       </td>
                     </tr>
                   ) : (
                     inventory.map((item) => (
-                      <tr key={item._id} className="hover:bg-blue-50/50 transition-colors even:bg-slate-50/50">
+                      <tr key={item._id} className="hover:bg-blue-50/50 transition-colors even:bg-slate-50/50 relative">
                         <td className="p-4 font-medium text-slate-900">{item.nombreProducto}</td>
                         <td className="p-4 text-right font-medium">
                           {item.cantidad} <span className="text-slate-400 text-xs font-normal">uds</span>
@@ -116,9 +162,29 @@ const Dashboard = ({ user, token }) => {
                             {new Date(item.fechaVencimiento).toLocaleDateString()}
                           </span>
                         </td>
-                        <td className="p-4 text-xs text-slate-400">
-                          {new Date(item.fechaIngreso).toLocaleString()}
-                        </td>
+                        {isAdmin && (
+                          <td className="p-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              {/* Edit Button */}
+                              <button 
+                                onClick={() => openEditModal(item)}
+                                className="p-1.5 text-blue-600 bg-blue-50 border border-transparent hover:border-blue-200 hover:bg-blue-100 rounded-md transition-all shadow-sm"
+                                title="Editar Stock"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                              </button>
+                              
+                              {/* Delete Button */}
+                              <button 
+                                onClick={() => handleDelete(item._id, item.nombreProducto)}
+                                className="p-1.5 text-rose-600 bg-rose-50 border border-transparent hover:border-rose-200 hover:bg-rose-100 rounded-md transition-all shadow-sm"
+                                title="Eliminar Medicamento"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -132,6 +198,60 @@ const Dashboard = ({ user, token }) => {
           <Alerts alerts={alerts} />
         </div>
       </div>
+
+      {/* Edit Form Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 shadow-2xl transition-opacity">
+          <div className="bg-white rounded-xl shadow-lg border border-slate-200 w-full max-w-sm overflow-hidden animate-fade-in-up">
+            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+              <h3 className="font-bold text-slate-800 text-lg">Modificar Stock</h3>
+              <button onClick={() => setEditingItem(null)} className="text-slate-400 hover:text-slate-700 transition-colors">
+                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <form onSubmit={submitEdit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">Cantidad Físicamente en Bodega</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    required
+                    value={editFormData.cantidad}
+                    onChange={(e) => setEditFormData({ ...editFormData, cantidad: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-800 mb-1.5">Fecha Vencimiento Registrada</label>
+                  <input 
+                    type="date" 
+                    required
+                    value={editFormData.fechaVencimiento}
+                    onChange={(e) => setEditFormData({ ...editFormData, fechaVencimiento: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all shadow-sm"
+                  />
+                </div>
+                <div className="pt-4 flex gap-3">
+                   <button 
+                    type="button"
+                    onClick={() => setEditingItem(null)}
+                    className="w-full bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-lg hover:bg-slate-200 transition-all shadow-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                  >
+                    Guardar Edición
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
