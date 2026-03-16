@@ -145,4 +145,26 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+const auth = require('../middlewares/auth');
+
+// Verify Password (MFA for Sensitive Operations)
+router.post('/verify-password', auth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    // Auth middleware gives us req.user.id
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Contraseña de seguridad incorrecta. Operación denegada.' });
+    }
+
+    res.status(200).json({ message: 'Autenticación secundaria exitosa' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error de servidor verificando MFA', error: err.message });
+  }
+});
+
 module.exports = router;

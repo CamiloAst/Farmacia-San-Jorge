@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Inventory = require('../models/Inventory');
+const Metric = require('../models/Metric');
 const auth = require('../middlewares/auth');
 const authorizeRoles = require('../middlewares/roles');
+const { sortFEFO } = require('../utils/fefo');
 
 // Create new inventory batch - only Regente or Administrador
 router.post('/entry', [auth, authorizeRoles('Regente', 'Administrador')], async (req, res) => {
@@ -17,8 +19,26 @@ router.post('/entry', [auth, authorizeRoles('Regente', 'Administrador')], async 
     });
 
     const savedEntry = await newEntry.save();
+    
+    // NFR: Metrics Tracking - Success Reception
+    await Metric.create({
+      domain: 'INVENTORY',
+      metricType: 'RECEPCION_TECNICA',
+      status: 'Éxito',
+      numericValue: cantidad,
+      details: { producto: nombreProducto, lote, user: req.user.email }
+    });
+
     res.status(201).json(savedEntry);
   } catch (err) {
+    // NFR: Metrics Tracking - Failed Reception
+    await Metric.create({
+      domain: 'INVENTORY',
+      metricType: 'RECEPCION_TECNICA',
+      status: 'Fallo',
+      numericValue: 0,
+      details: { error: err.message, user: req.user ? req.user.email : 'Unknown' }
+    });
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
@@ -26,10 +46,10 @@ router.post('/entry', [auth, authorizeRoles('Regente', 'Administrador')], async 
 // Dispatch inventory FEFO logic
 router.get('/dispatch', auth, async (req, res) => {
   try {
-    // FEFO: Order by Expiration Date Ascending
-    const items = await Inventory.find({ cantidad: { $gt: 0 } })
-                                 .sort({ fechaVencimiento: 1 });
-    res.json(items);
+    const items = await Inventory.find({ cantidad: { $gt: 0 } });
+    // RNF-16: Decoupled FEFO Utility Sort
+    const sortedItems = sortFEFO(items);
+    res.json(sortedItems);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -44,11 +64,22 @@ router.get('/alerts', auth, async (req, res) => {
       { $group: { _id: "$nombreProducto", totalStock: { $sum: "$cantidad" } } },
       { $match: { totalStock: { $lt: MINIMUM_STOCK } } }
     ]);
+
+    // NFR: Metrics Tracking - Stock Alert Precision Recording
+    await Metric.create({
+      domain: 'INVENTORY',
+      metricType: 'ALERTA_STOCK',
+      status: 'Advertencia',
+      numericValue: alerts.length,
+      details: { minimumStockLimitDetected: MINIMUM_STOCK, alertsFired: alerts }
+    });
+
     res.json(alerts);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
 
 // Update inventory item
 router.put('/:id', [auth, authorizeRoles('Administrador')], async (req, res) => {

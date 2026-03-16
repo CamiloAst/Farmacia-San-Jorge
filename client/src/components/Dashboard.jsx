@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import InventoryEntry from './InventoryEntry';
 import Alerts from './Alerts';
@@ -42,17 +43,36 @@ const Dashboard = ({ user, token }) => {
   const canEnterStock = user.rol === 'Regente' || user.rol === 'Administrador';
   const isAdmin = user.rol === 'Administrador';
 
-  const handleDelete = async (id, nombreProducto) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar permanentemente el medicamento: ${nombreProducto}?`)) {
-      try {
-        await axios.delete(`/api/inventory/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        fetchInventory();
-        fetchAlerts();
-      } catch (err) {
-        alert(err.response?.data?.message || 'Error al eliminar');
-      }
+  // RNF-14: MFA state for Deletions
+  const [mfaData, setMfaData] = useState({ show: false, itemId: null, itemName: '', password: '', error: '', loading: false });
+
+  const triggerDelete = (id, nombreProducto) => {
+    setMfaData({ show: true, itemId: id, itemName: nombreProducto, password: '', error: '', loading: false });
+  };
+
+  const handleMfaSubmit = async (e) => {
+    e.preventDefault();
+    setMfaData({ ...mfaData, loading: true, error: '' });
+    try {
+      // 1. Verify Authentication Password (MFA)
+      await axios.post('/api/auth/verify-password', { password: mfaData.password }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // 2. If Auth succeeds, proceed to Detele
+      await axios.delete(`/api/inventory/${mfaData.itemId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setMfaData({ show: false, itemId: null, itemName: '', password: '', error: '', loading: false });
+      fetchInventory();
+      fetchAlerts();
+    } catch (err) {
+      setMfaData({ 
+        ...mfaData, 
+        loading: false, 
+        error: err.response?.data?.message || 'Error de validación o eliminación.' 
+      });
     }
   };
 
@@ -85,11 +105,21 @@ const Dashboard = ({ user, token }) => {
 
   return (
     <div className="space-y-8 pb-12 relative">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Panel de Control</h1>
           <p className="text-slate-600 mt-1">Gestión integral de abastecimiento y alertas FEFO.</p>
         </div>
+        
+        {isAdmin && (
+          <Link 
+            to="/metrics"
+            className="flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-slate-800 transition-colors shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Analítica NFRs
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -176,7 +206,7 @@ const Dashboard = ({ user, token }) => {
                               
                               {/* Delete Button */}
                               <button 
-                                onClick={() => handleDelete(item._id, item.nombreProducto)}
+                                onClick={() => triggerDelete(item._id, item.nombreProducto)}
                                 className="p-1.5 text-rose-600 bg-rose-50 border border-transparent hover:border-rose-200 hover:bg-rose-100 rounded-md transition-all shadow-sm"
                                 title="Eliminar Medicamento"
                               >
@@ -245,6 +275,60 @@ const Dashboard = ({ user, token }) => {
                     className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
                   >
                     Guardar Edición
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RNF-14: MFA Validation Modal for Deletion */}
+      {mfaData.show && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 shadow-2xl transition-opacity">
+          <div className="bg-white rounded-xl shadow-lg border border-rose-200 w-full max-w-sm overflow-hidden animate-fade-in-up">
+            <div className="bg-rose-50 px-6 py-4 border-b border-rose-200 flex items-center gap-2">
+              <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              <h3 className="font-bold text-rose-800 text-lg">Validación de Seguridad</h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-slate-600 mb-4">
+                Estás a punto de eliminar permanentemente: <strong className="text-slate-900">{mfaData.itemName}</strong>. 
+                Por motivos de seguridad, por favor digita tu contraseña para autorizar esta acción crítica.
+              </p>
+              
+              {mfaData.error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-xs font-medium border border-red-100">{mfaData.error}</div>}
+
+              <form onSubmit={handleMfaSubmit} className="space-y-4">
+                <div>
+                  <input 
+                    type="password" 
+                    required
+                    placeholder="Contraseña de Administrador"
+                    value={mfaData.password}
+                    onChange={(e) => setMfaData({ ...mfaData, password: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent transition-all shadow-sm"
+                  />
+                </div>
+                <div className="pt-2 flex gap-3">
+                   <button 
+                    type="button"
+                    onClick={() => setMfaData({ show: false, itemId: null, itemName: '', password: '', error: '', loading: false })}
+                    className="w-full bg-slate-100 text-slate-700 font-bold py-2.5 px-4 rounded-lg hover:bg-slate-200 transition-all shadow-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={mfaData.loading}
+                    className="w-full bg-rose-600 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-rose-700 transition-all shadow-sm disabled:opacity-50 flex justify-center items-center gap-2"
+                  >
+                    {mfaData.loading ? 'Verificando...' : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Eliminar Registro
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

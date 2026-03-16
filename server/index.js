@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
+const metricsRoutes = require('./routes/metrics');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:admin123@farmacia.g5cdshf.mongodb.net/?appName=Farmacia';
