@@ -6,7 +6,9 @@ const InventoryEntry = ({ token, onEntrySuccess }) => {
     nombreProducto: '',
     cantidad: '',
     lote: '',
-    fechaVencimiento: ''
+    fechaVencimiento: '',
+    precio: '',
+    categoria: 'General'
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,6 +97,36 @@ const InventoryEntry = ({ token, onEntrySuccess }) => {
             className="w-full rounded-lg border-slate-300 border px-4 py-2.5 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-sm text-slate-800" 
           />
         </div>
+        <div>
+          <label className="block text-sm font-bold text-slate-800 mb-1.5">Precio de Venta</label>
+          <input 
+            type="number" 
+            name="precio" 
+            min="0" 
+            required 
+            value={formData.precio} 
+            onChange={handleChange} 
+            className="w-full rounded-lg border-slate-300 border px-4 py-2.5 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-sm" 
+            placeholder="0"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-slate-800 mb-1.5">Categoría</label>
+          <select 
+            name="categoria" 
+            required 
+            value={formData.categoria} 
+            onChange={handleChange} 
+            className="w-full rounded-lg border-slate-300 border px-4 py-2.5 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 focus:outline-none transition-all shadow-sm bg-white" 
+          >
+            <option value="General">General</option>
+            <option value="Analgésicos">Analgésicos</option>
+            <option value="Antibióticos">Antibióticos</option>
+            <option value="Vitaminas">Vitaminas</option>
+            <option value="Cuidado Personal">Cuidado Personal</option>
+            <option value="Primeros Auxilios">Primeros Auxilios</option>
+          </select>
+        </div>
         <div className="md:col-span-2 flex justify-end mt-4 pt-4 border-t border-slate-200">
           <button 
             type="submit" 
@@ -124,9 +156,10 @@ const InventoryEntry = ({ token, onEntrySuccess }) => {
               <p className="text-slate-600 text-sm mb-4">Por favor, verifique la exactitud del lote antes de ingresarlo permanentemente a la bóveda de inventario FEFO:</p>
               
               <ul className="space-y-3 bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-                <li className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 font-medium">Producto:</span> <span className="font-bold text-slate-900">{formData.nombreProducto}</span></li>
+                <li className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 font-medium">Producto:</span> <span className="font-bold text-slate-900">{formData.nombreProducto} ({formData.categoria})</span></li>
                 <li className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 font-medium">Lote Físico:</span> <span className="font-bold font-mono text-slate-900">{formData.lote}</span></li>
                 <li className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 font-medium">Unidades a ingresar:</span> <span className="font-bold text-slate-900">{formData.cantidad} u.</span></li>
+                <li className="flex justify-between border-b border-slate-200 pb-2"><span className="text-slate-500 font-medium">Precio Unitario:</span> <span className="font-bold text-slate-900">${formData.precio}</span></li>
                 <li className="flex justify-between"><span className="text-slate-500 font-medium">Fecha Caducidad:</span> <span className="font-bold text-slate-900">{new Date(formData.fechaVencimiento).toLocaleDateString()}</span></li>
               </ul>
 

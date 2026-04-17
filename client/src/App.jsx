@@ -6,6 +6,7 @@ import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Dashboard from './components/Dashboard';
 import MetricsDashboard from './components/MetricsDashboard';
+import POS from './components/POS';
 import Logo from './components/Logo';
 
 function App() {
@@ -74,6 +75,10 @@ function App() {
             <Route 
               path="/metrics" 
               element={token && user?.rol === 'Administrador' ? <MetricsDashboard user={user} token={token} /> : <Navigate to="/dashboard" />} 
+            />
+            <Route 
+              path="/pos" 
+              element={token && ['Administrador', 'Regente', 'Vendedor'].includes(user?.rol) ? <POS user={user} token={token} /> : <Navigate to="/dashboard" />} 
             />
             <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
           </Routes>

@@ -9,13 +9,15 @@ const { sortFEFO } = require('../utils/fefo');
 // Create new inventory batch - only Regente or Administrador
 router.post('/entry', [auth, authorizeRoles('Regente', 'Administrador')], async (req, res) => {
   try {
-    const { nombreProducto, cantidad, lote, fechaVencimiento } = req.body;
+    const { nombreProducto, cantidad, lote, fechaVencimiento, precio, categoria } = req.body;
     
     const newEntry = new Inventory({
       nombreProducto,
       cantidad,
       lote,
-      fechaVencimiento
+      fechaVencimiento,
+      precio,
+      categoria
     });
 
     const savedEntry = await newEntry.save();
