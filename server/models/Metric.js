@@ -4,12 +4,12 @@ const metricSchema = new mongoose.Schema({
   domain: { 
     type: String, 
     required: true,
-    enum: ['INVENTORY', 'AUTH', 'SYSTEM']
+    enum: ['INVENTORY', 'AUTH', 'SYSTEM', 'SALES']
   },
   metricType: { 
     type: String, 
     required: true,
-    enum: ['RECEPCION_TECNICA', 'ALERTA_STOCK', 'ELIMINACION_MFA']
+    enum: ['RECEPCION_TECNICA', 'ALERTA_STOCK', 'ELIMINACION_MFA', 'NUEVA_VENTA']
   },
   status: { 
     type: String, 
