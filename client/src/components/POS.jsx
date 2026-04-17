@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import InvoiceTicket from './InvoiceTicket';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
@@ -23,6 +24,8 @@ function POS({ user, token }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [completedSale, setCompletedSale] = useState(null);
+  const printRef = useRef();
   
   const IMPUESTO_PORCENTAJE = 0.19;
 
@@ -122,6 +125,7 @@ function POS({ user, token }) {
 
     try {
       const res = await api.post('/sales', payload);
+      setCompletedSale(res.data); // Muestra el ticket 
       setSuccessMsg(`Factura generada exitosamente: ${res.data.numeroFactura}`);
       setCart([]); // Clean cart
       setCustomerName('Consumidor Final');
@@ -140,8 +144,18 @@ function POS({ user, token }) {
   const taxes = globalSubtotal * IMPUESTO_PORCENTAJE;
   const grandTotal = globalSubtotal + taxes;
 
+  const handlePrint = () => {
+    if (printRef.current) {
+      printRef.current.classList.add('custom-print-container');
+      window.print();
+      setTimeout(() => {
+        if(printRef.current) printRef.current.classList.remove('custom-print-container');
+      }, 1000);
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row gap-6 p-4 h-full bg-slate-50">
+    <div className="flex flex-col md:flex-row gap-6 p-4 h-full bg-slate-50 relative">
       
       {/* Panel Izquierdo: Buscador de Productos */}
       <div className="w-full md:w-7/12 flex flex-col bg-white p-6 rounded-xl shadow-lg border border-slate-100">
@@ -296,6 +310,47 @@ function POS({ user, token }) {
         </div>
 
       </div>
+
+      {/* Modal Visor de Ticket HTML */}
+      {completedSale && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 print:bg-white print:p-0">
+          <div className="bg-slate-100 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] print:shadow-none print:w-full print:h-auto">
+            {/* Modal Header */}
+            <div className="p-4 bg-emerald-500 border-b border-emerald-600 flex justify-between items-center print:hidden">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                ¡Venta Exitosa! Factura HTML
+              </h3>
+            </div>
+            
+            {/* Ticket Scrollable View */}
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar flex justify-center print:p-0 print:overflow-visible">
+              <InvoiceTicket ref={printRef} sale={completedSale} />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-white border-t border-slate-200 flex justify-end gap-3 print:hidden">
+              <button 
+                onClick={() => setCompletedSale(null)}
+                className="px-4 py-2 text-slate-600 font-medium hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+              >
+                Cerrar e Iniciar Nueva Venta
+              </button>
+              <button 
+                onClick={handlePrint}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm shadow-blue-200 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Imprimir Factura
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

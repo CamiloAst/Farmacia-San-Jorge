@@ -50,6 +50,18 @@ router.get('/search', auth, async (req, res) => {
   }
 });
 
+// GET /api/sales - Listar el historial de ventas completo (Facturas)
+router.get('/', [auth, authorizeRoles('Vendedor', 'Regente', 'Administrador')], async (req, res) => {
+  try {
+    const sales = await Sale.find()
+      .populate('usuarioVendedor', 'nombre rol')
+      .sort({ fecha: -1 }); // Las más recientes primero
+    res.json(sales);
+  } catch (err) {
+    res.status(500).json({ message: 'Error obteniendo historial de ventas', error: err.message });
+  }
+});
+
 // POST /api/sales - Realizar una venta con Transacciones Mongo y FEFO
 router.post('/', [auth, authorizeRoles('Vendedor', 'Regente', 'Administrador')], async (req, res) => {
   const session = await mongoose.startSession();
