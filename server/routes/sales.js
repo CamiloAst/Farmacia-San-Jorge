@@ -40,8 +40,8 @@ router.get('/search', auth, async (req, res) => {
     const mappedResult = aggregatedInventory.map(item => ({
       nombreProducto: item._id,
       stockDisponible: item.stockGlobal,
-      precio: item.precio,
-      categoria: item.categoria
+      precio: item.precio || 0,
+      categoria: item.categoria || 'General'
     }));
 
     res.json(mappedResult);

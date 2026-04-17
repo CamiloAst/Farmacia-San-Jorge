@@ -192,7 +192,7 @@ function POS({ user, token }) {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg text-slate-800">
-                        ${prod.precio.toLocaleString()}
+                        ${(prod.precio || 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -249,7 +249,7 @@ function POS({ user, token }) {
                 <div key={item.nombreProducto} className="bg-white p-3 rounded shadow-sm border border-slate-200 flex justify-between items-center group">
                   <div className="w-1/2">
                     <p className="font-semibold text-slate-800 line-clamp-1" title={item.nombreProducto}>{item.nombreProducto}</p>
-                    <p className="text-xs text-slate-500">${item.precioUnitario.toLocaleString()} c/u</p>
+                    <p className="text-xs text-slate-500">${(item.precioUnitario || 0).toLocaleString()} c/u</p>
                   </div>
                   
                   <div className="flex items-center bg-slate-100 rounded-md p-1">
@@ -259,7 +259,7 @@ function POS({ user, token }) {
                   </div>
                   
                   <div className="w-1/4 text-right font-bold text-slate-700">
-                    ${item.subtotal.toLocaleString()}
+                    ${(item.subtotal || 0).toLocaleString()}
                   </div>
                 </div>
               ))}
