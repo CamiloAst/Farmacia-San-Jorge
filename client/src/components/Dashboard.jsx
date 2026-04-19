@@ -200,7 +200,7 @@ const Dashboard = ({ user, token }) => {
                       <tr key={item._id} className="hover:bg-blue-50/50 transition-colors even:bg-slate-50/50 relative">
                         <td className="p-4 font-medium text-slate-900">{item.nombreProducto}</td>
                         <td className="p-4 text-right font-medium">
-                          {item.cantidad} <span className="text-slate-400 text-xs font-normal">uds</span>
+                          {item.cantidad} <span className="text-slate-400 text-xs font-normal" translate="no">uds</span>
                         </td>
                         <td className="p-4 text-slate-500 font-mono text-xs bg-slate-100/50 rounded inline-block mt-3 mb-2 ml-4 px-2 py-1">{item.lote}</td>
                         <td className="p-4">

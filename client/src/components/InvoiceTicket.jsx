@@ -45,7 +45,7 @@ const InvoiceTicket = forwardRef(({ sale }, ref) => {
               <tr key={idx} className="border-b border-dashed border-slate-200">
                 <td className="py-2 pr-1 truncate max-w-[120px]">{item.nombreProducto}</td>
                 <td className="py-2 text-center">{item.cantidad}</td>
-                <td className="py-2 text-right">${item.subtotal.toLocaleString()}</td>
+                <td className="py-2 text-right">$ {Number(item.subtotal).toLocaleString('es-CO')}</td>
               </tr>
             ))}
           </tbody>
@@ -55,15 +55,15 @@ const InvoiceTicket = forwardRef(({ sale }, ref) => {
       <div className="border-t border-slate-800 pt-3">
         <div className="flex justify-between text-xs mb-1">
           <span>Subtotal:</span>
-          <span>${sale.subtotal?.toLocaleString()}</span>
+          <span>$ {Number(sale.subtotal || 0).toLocaleString('es-CO')}</span>
         </div>
         <div className="flex justify-between text-xs mb-1">
           <span>IVA (19%):</span>
-          <span>${sale.impuestos?.toLocaleString()}</span>
+          <span>$ {Number(sale.impuestos || 0).toLocaleString('es-CO')}</span>
         </div>
         <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-dashed border-slate-300">
           <span>TOTAL:</span>
-          <span>${sale.total?.toLocaleString()}</span>
+          <span>$ {Number(sale.total || 0).toLocaleString('es-CO')}</span>
         </div>
       </div>
 

@@ -8,7 +8,7 @@ const Alerts = ({ alerts }) => {
         Alertas Críticas
       </h2>
       <p className="text-xs text-slate-500 mb-6 font-medium uppercase tracking-wider">
-        Umbral: menor a 10 uds
+        Umbral: menor a 10 <span translate="no">uds</span>
       </p>
       
       {alerts.length === 0 ? (

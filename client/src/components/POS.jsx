@@ -62,7 +62,7 @@ function POS({ user, token }) {
           ? { 
               ...item, 
               cantidad: item.cantidad + 1, 
-              subtotal: (item.cantidad + 1) * product.precio 
+              subtotal: (item.cantidad + 1) * Number(product.precio) 
             } 
           : item
       ));
@@ -73,9 +73,9 @@ function POS({ user, token }) {
       }
       setCart([...cart, {
         nombreProducto: product.nombreProducto,
-        precioUnitario: product.precio,
+        precioUnitario: Number(product.precio),
         cantidad: 1,
-        subtotal: product.precio,
+        subtotal: Number(product.precio),
         stockMaximo: product.stockDisponible
       }]);
     }
@@ -100,7 +100,7 @@ function POS({ user, token }) {
 
     setCart(cart.map(item =>
       item.nombreProducto === nombreProducto
-        ? { ...item, cantidad: newQuantity, subtotal: newQuantity * item.precioUnitario }
+        ? { ...item, cantidad: newQuantity, subtotal: newQuantity * Number(item.precioUnitario) }
         : item
     ));
     setError(null);
@@ -140,8 +140,8 @@ function POS({ user, token }) {
   };
 
   // Cálculos de Total Dinámico
-  const globalSubtotal = cart.reduce((acc, curr) => acc + curr.subtotal, 0);
-  const taxes = globalSubtotal * IMPUESTO_PORCENTAJE;
+  const globalSubtotal = cart.reduce((acc, curr) => acc + Number(curr.subtotal), 0);
+  const taxes = Math.round(globalSubtotal * IMPUESTO_PORCENTAJE);
   const grandTotal = globalSubtotal + taxes;
 
   const handlePrint = () => {
@@ -201,12 +201,12 @@ function POS({ user, token }) {
                     <div>
                       <p className="text-xs text-slate-500 uppercase tracking-wide">Stock Total</p>
                       <p className={`font-medium ${prod.stockDisponible > 10 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                        {prod.stockDisponible} uds
+                        {prod.stockDisponible} <span translate="no">uds</span>
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg text-slate-800">
-                        ${(prod.precio || 0).toLocaleString()}
+                        $ {Number(prod.precio || 0).toLocaleString('es-CO')}
                       </p>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ function POS({ user, token }) {
                 <div key={item.nombreProducto} className="bg-white p-3 rounded shadow-sm border border-slate-200 flex justify-between items-center group">
                   <div className="w-1/2">
                     <p className="font-semibold text-slate-800 line-clamp-1" title={item.nombreProducto}>{item.nombreProducto}</p>
-                    <p className="text-xs text-slate-500">${(item.precioUnitario || 0).toLocaleString()} c/u</p>
+                    <p className="text-xs text-slate-500">$ {Number(item.precioUnitario || 0).toLocaleString('es-CO')} c/u</p>
                   </div>
                   
                   <div className="flex items-center bg-slate-100 rounded-md p-1">
@@ -273,7 +273,7 @@ function POS({ user, token }) {
                   </div>
                   
                   <div className="w-1/4 text-right font-bold text-slate-700">
-                    ${(item.subtotal || 0).toLocaleString()}
+                    $ {Number(item.subtotal || 0).toLocaleString('es-CO')}
                   </div>
                 </div>
               ))}
@@ -285,15 +285,15 @@ function POS({ user, token }) {
         <div className="bg-slate-800 text-white p-5 rounded-xl mt-auto shadow-inner">
           <div className="flex justify-between mb-2 text-slate-300 text-sm">
             <span>Subtotal</span>
-            <span>${globalSubtotal.toLocaleString()}</span>
+            <span>$ {globalSubtotal.toLocaleString('es-CO')}</span>
           </div>
           <div className="flex justify-between mb-3 text-slate-300 text-sm pb-3 border-b border-slate-600">
             <span>IVA (19%)</span>
-            <span>${taxes.toLocaleString()}</span>
+            <span>$ {taxes.toLocaleString('es-CO')}</span>
           </div>
           <div className="flex justify-between items-center mb-5">
             <span className="font-semibold text-lg text-slate-200">Total a Pagar</span>
-            <span className="font-bold text-3xl tracking-tight">${grandTotal.toLocaleString()}</span>
+            <span className="font-bold text-3xl tracking-tight">$ {grandTotal.toLocaleString('es-CO')}</span>
           </div>
 
           <button 

@@ -142,7 +142,7 @@ const SalesHistory = () => {
                         {sale.cliente?.nombre || 'Consumidor Final'}
                       </td>
                       <td className="p-4 text-right font-bold text-slate-800">
-                        ${sale.total.toLocaleString()}
+                        $ {Number(sale.total).toLocaleString('es-CO')}
                       </td>
                       <td className="p-4 text-center">
                         <button 
