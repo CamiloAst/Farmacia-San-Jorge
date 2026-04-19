@@ -62,7 +62,7 @@ function POS({ user, token }) {
           ? { 
               ...item, 
               cantidad: item.cantidad + 1, 
-              subtotal: (item.cantidad + 1) * Number(product.precio) 
+              subtotal: (item.cantidad + 1) * product.precio 
             } 
           : item
       ));
@@ -73,9 +73,9 @@ function POS({ user, token }) {
       }
       setCart([...cart, {
         nombreProducto: product.nombreProducto,
-        precioUnitario: Number(product.precio),
+        precioUnitario: product.precio,
         cantidad: 1,
-        subtotal: Number(product.precio),
+        subtotal: product.precio,
         stockMaximo: product.stockDisponible
       }]);
     }
@@ -100,7 +100,7 @@ function POS({ user, token }) {
 
     setCart(cart.map(item =>
       item.nombreProducto === nombreProducto
-        ? { ...item, cantidad: newQuantity, subtotal: newQuantity * Number(item.precioUnitario) }
+        ? { ...item, cantidad: newQuantity, subtotal: newQuantity * item.precioUnitario }
         : item
     ));
     setError(null);
@@ -140,7 +140,7 @@ function POS({ user, token }) {
   };
 
   // Cálculos de Total Dinámico
-  const globalSubtotal = cart.reduce((acc, curr) => acc + Number(curr.subtotal), 0);
+  const globalSubtotal = cart.reduce((acc, curr) => acc + curr.subtotal, 0);
   const taxes = Math.round(globalSubtotal * IMPUESTO_PORCENTAJE);
   const grandTotal = globalSubtotal + taxes;
 
@@ -206,7 +206,7 @@ function POS({ user, token }) {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-lg text-slate-800">
-                        $ {Number(prod.precio || 0).toLocaleString('es-CO')}
+                        $ {prod.precio.toLocaleString('es-CO')}
                       </p>
                     </div>
                   </div>
@@ -263,7 +263,7 @@ function POS({ user, token }) {
                 <div key={item.nombreProducto} className="bg-white p-3 rounded shadow-sm border border-slate-200 flex justify-between items-center group">
                   <div className="w-1/2">
                     <p className="font-semibold text-slate-800 line-clamp-1" title={item.nombreProducto}>{item.nombreProducto}</p>
-                    <p className="text-xs text-slate-500">$ {Number(item.precioUnitario || 0).toLocaleString('es-CO')} c/u</p>
+                    <p className="text-xs text-slate-500">$ {item.precioUnitario.toLocaleString('es-CO')} c/u</p>
                   </div>
                   
                   <div className="flex items-center bg-slate-100 rounded-md p-1">
@@ -273,7 +273,7 @@ function POS({ user, token }) {
                   </div>
                   
                   <div className="w-1/4 text-right font-bold text-slate-700">
-                    $ {Number(item.subtotal || 0).toLocaleString('es-CO')}
+                    $ {item.subtotal.toLocaleString('es-CO')}
                   </div>
                 </div>
               ))}
