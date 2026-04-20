@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
@@ -21,12 +21,63 @@ function App() {
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     setToken('');
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-  };
+  }, []);
+
+  // RNF-15: Caducidad de Sesión por Inactividad (10 minutos)
+  const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
+  const WARNING_BEFORE_MS = 30 * 1000; // Advertencia 30s antes
+  const inactivityTimer = useRef(null);
+  const warningTimer = useRef(null);
+  const [showInactivityWarning, setShowInactivityWarning] = useState(false);
+
+  const resetInactivityTimer = useCallback(() => {
+    // Limpiar timers anteriores
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    if (warningTimer.current) clearTimeout(warningTimer.current);
+    setShowInactivityWarning(false);
+
+    if (!token) return; // Solo activar si hay sesión
+
+    // Timer de advertencia (se activa 30s antes del cierre)
+    warningTimer.current = setTimeout(() => {
+      setShowInactivityWarning(true);
+    }, INACTIVITY_LIMIT_MS - WARNING_BEFORE_MS);
+
+    // Timer de cierre de sesión
+    inactivityTimer.current = setTimeout(() => {
+      console.log('[RNF-15] Sesión cerrada automáticamente por inactividad de 10 minutos.');
+      setShowInactivityWarning(false);
+      handleLogout();
+    }, INACTIVITY_LIMIT_MS);
+  }, [token, handleLogout]);
+
+  useEffect(() => {
+    if (!token) {
+      // Sin sesión activa, limpiar todo
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      if (warningTimer.current) clearTimeout(warningTimer.current);
+      setShowInactivityWarning(false);
+      return;
+    }
+
+    // Eventos que indican actividad del usuario
+    const activityEvents = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    activityEvents.forEach(event => window.addEventListener(event, resetInactivityTimer));
+
+    // Iniciar el primer timer
+    resetInactivityTimer();
+
+    return () => {
+      activityEvents.forEach(event => window.removeEventListener(event, resetInactivityTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      if (warningTimer.current) clearTimeout(warningTimer.current);
+    };
+  }, [token, resetInactivityTimer]);
 
   return (
     <Router>
@@ -50,6 +101,13 @@ function App() {
             </div>
           )}
         </header>
+
+        {/* RNF-15: Banner de advertencia de cierre de sesión por inactividad */}
+        {showInactivityWarning && (
+          <div className="bg-amber-500 text-white text-center py-2 px-4 text-sm font-semibold animate-pulse shadow-md">
+            ⚠️ Tu sesión se cerrará en 30 segundos por inactividad. Mueve el mouse o presiona una tecla para continuar.
+          </div>
+        )}
 
         <main className="container mx-auto p-4 md:p-8 flex-1 flex flex-col">
           <Routes>
