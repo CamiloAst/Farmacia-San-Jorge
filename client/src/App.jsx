@@ -29,8 +29,8 @@ function App() {
   }, []);
 
   // RNF-15: Caducidad de Sesión por Inactividad (10 minutos)
-  const INACTIVITY_LIMIT_MS = 10 * 1000; // 10 minutos
-  const WARNING_BEFORE_MS = 5 * 1000; // Advertencia 30s antes
+  const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
+  const WARNING_BEFORE_MS = 30 * 1000; // Advertencia 30s antes
   const inactivityTimer = useRef(null);
   const warningTimer = useRef(null);
   const [showInactivityWarning, setShowInactivityWarning] = useState(false);
