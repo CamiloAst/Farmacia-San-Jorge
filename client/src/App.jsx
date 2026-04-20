@@ -105,7 +105,7 @@ function App() {
         {/* RNF-15: Banner de advertencia de cierre de sesión por inactividad */}
         {showInactivityWarning && (
           <div className="bg-amber-500 text-white text-center py-2 px-4 text-sm font-semibold animate-pulse shadow-md">
-            Tu sesión se cerrará en 30 segundos por inactividad. Mueve el mouse o presiona una tecla para continuar.
+            ⚠️ Tu sesión se cerrará en 30 segundos por inactividad. Mueve el mouse o presiona una tecla para continuar.
           </div>
         )}
 
