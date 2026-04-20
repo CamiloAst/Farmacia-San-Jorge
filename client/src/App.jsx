@@ -29,7 +29,7 @@ function App() {
   }, []);
 
   // RNF-15: Caducidad de Sesión por Inactividad (10 minutos)
-  const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
+  const INACTIVITY_LIMIT_MS = 10 * 1000; // 10 minutos
   const WARNING_BEFORE_MS = 30 * 1000; // Advertencia 30s antes
   const inactivityTimer = useRef(null);
   const warningTimer = useRef(null);
@@ -50,7 +50,7 @@ function App() {
 
     // Timer de cierre de sesión
     inactivityTimer.current = setTimeout(() => {
-      console.log('[RNF-15] Sesión cerrada automáticamente por inactividad de 10 minutos.');
+      console.log('Sesión cerrada automáticamente por inactividad de 10 minutos.');
       setShowInactivityWarning(false);
       handleLogout();
     }, INACTIVITY_LIMIT_MS);
