@@ -65,6 +65,24 @@ const InvoiceTicket = forwardRef(({ sale }, ref) => {
           <span>TOTAL:</span>
           <span>$ {sale.total.toLocaleString('es-CO')}</span>
         </div>
+        <div className="mt-2 pt-2 border-t border-dashed border-slate-300">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-semibold">Método de Pago:</span>
+            <span>{sale.metodoPago || 'Efectivo'}</span>
+          </div>
+          {(sale.metodoPago === 'Efectivo' || !sale.metodoPago) && (
+            <>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-semibold">Efectivo Recibido:</span>
+                <span>$ {(sale.montoEntregado || 0).toLocaleString('es-CO')}</span>
+              </div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="font-semibold">Cambio:</span>
+                <span>$ {(sale.cambio || 0).toLocaleString('es-CO')}</span>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="text-center mt-8 text-xs text-slate-500">

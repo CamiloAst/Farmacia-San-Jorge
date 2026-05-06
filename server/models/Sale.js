@@ -15,6 +15,8 @@ const saleSchema = new mongoose.Schema({
   impuestos: { type: Number, required: true }, // As requested 19%
   total: { type: Number, required: true },
   metodoPago: { type: String, enum: ['Efectivo', 'Tarjeta', 'Transferencia'], required: true },
+  montoEntregado: { type: Number, default: 0 },
+  cambio: { type: Number, default: 0 },
   fecha: { type: Date, default: Date.now },
   usuarioVendedor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   numeroFactura: { type: String, required: true, unique: true }

@@ -145,7 +145,11 @@ function POS({ user, token }) {
         nombreProducto: item.nombreProducto,
         cantidad: item.cantidad
       })),
-      metodoPago: paymentMethod
+      metodoPago: paymentMethod,
+      ...(paymentMethod === 'Efectivo' && {
+        montoEntregado: Number(cashReceived),
+        cambio: Number(cashReceived) - grandTotal
+      })
     };
 
     try {
