@@ -68,7 +68,7 @@ router.post('/', [auth, authorizeRoles('Vendedor', 'Regente', 'Administrador')],
   session.startTransaction();
 
   try {
-    const { cliente, productos } = req.body;
+    const { cliente, productos, metodoPago } = req.body;
     let subtotalCálculo = 0;
     const finalProductos = [];
 
@@ -133,6 +133,7 @@ router.post('/', [auth, authorizeRoles('Vendedor', 'Regente', 'Administrador')],
       subtotal: subtotalCálculo,
       impuestos: impuestosCálculo,
       total: totalCálculo,
+      metodoPago: metodoPago || 'Efectivo', // Default for safety, but required by schema
       usuarioVendedor: req.user.id,
       numeroFactura: numeroFacturaNuevo
     });

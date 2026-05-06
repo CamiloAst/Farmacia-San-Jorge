@@ -25,6 +25,10 @@ function POS({ user, token }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [completedSale, setCompletedSale] = useState(null);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('Efectivo');
+  const [cashReceived, setCashReceived] = useState('');
+  const [checkoutStatus, setCheckoutStatus] = useState('idle'); // idle, processing, approved
   const printRef = useRef();
   
   const IMPUESTO_PORCENTAJE = 0.19;
@@ -106,12 +110,32 @@ function POS({ user, token }) {
     setError(null);
   };
 
-  const procesarVenta = async () => {
+  const handleProceedToPayment = () => {
     if (cart.length === 0) {
       setError('El carrito está vacío.');
       return;
     }
+    setShowCheckout(true);
+    setPaymentMethod('Efectivo');
+    setCashReceived('');
+    setCheckoutStatus('idle');
+  };
 
+  const handleSimulatedPayment = async () => {
+    setCheckoutStatus('processing');
+    
+    if (paymentMethod === 'Tarjeta') {
+      // Simulate 3 seconds payment gateway processing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      setCheckoutStatus('approved');
+    } else if (paymentMethod === 'Transferencia') {
+      // Static validation simulation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setCheckoutStatus('approved');
+    }
+  };
+
+  const procesarVenta = async () => {
     setLoading(true);
     setError(null);
 
@@ -120,11 +144,13 @@ function POS({ user, token }) {
       productos: cart.map(item => ({
         nombreProducto: item.nombreProducto,
         cantidad: item.cantidad
-      }))
+      })),
+      metodoPago: paymentMethod
     };
 
     try {
       const res = await api.post('/sales', payload);
+      setShowCheckout(false);
       setCompletedSale(res.data); // Muestra el ticket 
       setSuccessMsg(`Factura generada exitosamente: ${res.data.numeroFactura}`);
       setCart([]); // Clean cart
@@ -134,8 +160,10 @@ function POS({ user, token }) {
       fetchProducts(''); // refresh stocks
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error procesando venta.');
+      setShowCheckout(false);
     } finally {
       setLoading(false);
+      setCheckoutStatus('idle');
     }
   };
 
@@ -302,14 +330,174 @@ function POS({ user, token }) {
                 ? 'bg-slate-600 text-slate-400 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-lg focus:ring-emerald-500/50 hover:-translate-y-0.5'
             }`}
-            onClick={procesarVenta}
+            onClick={handleProceedToPayment}
             disabled={loading || cart.length === 0}
           >
-            {loading ? 'Procesando Venta...' : 'Generar Factura (FEFO)'}
+            {loading ? 'Procesando...' : 'Proceder al Pago'}
           </button>
         </div>
 
       </div>
+
+      {/* Modal de Checkout */}
+      {showCheckout && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-5 bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700 flex justify-between items-center">
+              <h3 className="font-bold text-lg text-white">Completar Pago</h3>
+              <button onClick={() => setShowCheckout(false)} className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <p className="text-sm text-slate-500 font-medium uppercase tracking-wider mb-1">Total a Cobrar</p>
+                <p className="text-4xl font-extrabold text-emerald-600">$ {grandTotal.toLocaleString('es-CO')}</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Método de Pago</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['Efectivo', 'Tarjeta', 'Transferencia'].map(method => (
+                    <button
+                      key={method}
+                      onClick={() => { setPaymentMethod(method); setCheckoutStatus('idle'); setCashReceived(''); }}
+                      className={`py-2 px-3 rounded-lg border text-sm font-medium transition-all ${
+                        paymentMethod === method 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lógica Específica por Método */}
+              <div className="min-h-[120px] bg-slate-50 rounded-xl p-4 border border-slate-100 mb-6 flex flex-col justify-center">
+                
+                {paymentMethod === 'Efectivo' && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Dinero Recibido</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-slate-400 font-medium">$</span>
+                        <input 
+                          type="number" 
+                          className="w-full pl-8 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-emerald-500 bg-white border-slate-200 outline-none text-slate-800 font-semibold"
+                          placeholder="0"
+                          value={cashReceived}
+                          onChange={(e) => setCashReceived(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    {cashReceived && Number(cashReceived) >= grandTotal && (
+                      <div className="flex justify-between items-center bg-emerald-100 text-emerald-800 p-3 rounded-lg border border-emerald-200">
+                        <span className="text-sm font-semibold">Cambio a devolver:</span>
+                        <span className="font-bold text-lg">$ {(Number(cashReceived) - grandTotal).toLocaleString('es-CO')}</span>
+                      </div>
+                    )}
+                    {cashReceived && Number(cashReceived) < grandTotal && (
+                      <div className="text-red-500 text-sm font-medium text-center">
+                        Monto insuficiente
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {paymentMethod === 'Tarjeta' && (
+                  <div className="text-center flex flex-col items-center">
+                    {checkoutStatus === 'idle' && (
+                      <>
+                        <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        </div>
+                        <p className="text-sm text-slate-600 font-medium">Haga clic abajo para simular inserción en el datáfono.</p>
+                      </>
+                    )}
+                    {checkoutStatus === 'processing' && (
+                      <>
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mb-3"></div>
+                        <p className="text-sm text-slate-600 font-medium animate-pulse">Procesando con el banco...</p>
+                      </>
+                    )}
+                    {checkoutStatus === 'approved' && (
+                      <>
+                        <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <p className="text-sm font-bold text-emerald-700">Pago Aprobado</p>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {paymentMethod === 'Transferencia' && (
+                  <div className="text-center flex flex-col items-center">
+                     {checkoutStatus === 'idle' && (
+                       <>
+                         <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-3">
+                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                         </div>
+                         <p className="text-sm text-slate-600 font-medium mb-1">Verifique el ingreso de la transferencia.</p>
+                       </>
+                     )}
+                     {checkoutStatus === 'processing' && (
+                        <>
+                          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-500 mb-3"></div>
+                          <p className="text-sm text-slate-600 font-medium animate-pulse">Verificando comprobante...</p>
+                        </>
+                      )}
+                     {checkoutStatus === 'approved' && (
+                        <>
+                          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-3">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                          </div>
+                          <p className="text-sm font-bold text-emerald-700">Transferencia Confirmada</p>
+                        </>
+                      )}
+                  </div>
+                )}
+
+              </div>
+
+              {/* Botón de Confirmación */}
+              {paymentMethod === 'Efectivo' && (
+                <button 
+                  onClick={procesarVenta}
+                  disabled={!cashReceived || Number(cashReceived) < grandTotal || loading}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition-all"
+                >
+                  {loading ? 'Guardando Venta...' : 'Confirmar Pago y Facturar'}
+                </button>
+              )}
+
+              {(paymentMethod === 'Tarjeta' || paymentMethod === 'Transferencia') && checkoutStatus !== 'approved' && (
+                <button 
+                  onClick={handleSimulatedPayment}
+                  disabled={checkoutStatus === 'processing'}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-md transition-all"
+                >
+                  {checkoutStatus === 'processing' ? 'Procesando...' : (paymentMethod === 'Tarjeta' ? 'Insertar Tarjeta' : 'Verificar Comprobante')}
+                </button>
+              )}
+
+              {(paymentMethod === 'Tarjeta' || paymentMethod === 'Transferencia') && checkoutStatus === 'approved' && (
+                <button 
+                  onClick={procesarVenta}
+                  disabled={loading}
+                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all"
+                >
+                  {loading ? 'Guardando Venta...' : 'Confirmar Pago y Facturar'}
+                </button>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Visor de Ticket HTML */}
       {completedSale && (
