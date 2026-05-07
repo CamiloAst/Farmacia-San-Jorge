@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    options {
+        // Mantiene solo las últimas 3 ejecuciones para no llenar el disco del servidor
+        buildDiscarder(logRotator(numToKeepStr: '3'))
+    }
+
     tools {
         nodejs 'Node20' // Referencia a la configuración que hiciste en Jenkins Tools
     }
@@ -56,6 +61,10 @@ pipeline {
     }
 
     post {
+        always {
+            // Limpia el workspace al finalizar el pipeline para no ocupar espacio
+            cleanWs()
+        }
         success {
             echo '¡SGT San Jorge desplegado con éxito! ✅'
         }
