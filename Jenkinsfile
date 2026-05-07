@@ -48,10 +48,12 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 echo 'Desplegando cambios en el servidor local de AWS...'
-                // Usamos "sudo" para tener permisos de escritura en la carpeta de ubuntu
+                // 1. Borramos y copiamos los archivos usando poderes de root (esto ya funcionaba)
                 sh "sudo rm -rf /home/ubuntu/Farmacia-San-Jorge/server/dist"
                 sh "sudo cp -r client/dist /home/ubuntu/Farmacia-San-Jorge/server/"
-                sh "cd /home/ubuntu/Farmacia-San-Jorge/server && sudo npm install && sudo pm2 restart all"
+                
+                // 2. Nos "disfrazamos" de ubuntu para entrar a su carpeta y reiniciar SU proceso de PM2
+                sh "sudo su - ubuntu -c 'cd /home/ubuntu/Farmacia-San-Jorge/server && npm install && pm2 restart all'"
             }
         }
     }
