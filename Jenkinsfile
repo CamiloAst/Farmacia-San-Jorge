@@ -46,9 +46,6 @@ pipeline {
         }
 
         stage('Deploy to EC2') {
-            when {
-                branch 'main' 
-            }
             steps {
                 sshagent([SSH_CREDENTIAL_ID]) {
                     echo 'Desplegando cambios en el servidor local de AWS...'
