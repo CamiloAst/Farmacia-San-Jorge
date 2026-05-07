@@ -47,12 +47,11 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent([SSH_CREDENTIAL_ID]) {
-                    echo 'Desplegando cambios en el servidor local de AWS...'
-                    // Sincronizamos el código y reiniciamos procesos
-                    sh "cp -r client/dist/* /home/ubuntu/Farmacia-San-Jorge/server/dist/"
-                    sh "cd /home/ubuntu/Farmacia-San-Jorge/server && npm install && pm2 restart all"
-                }
+                echo 'Desplegando cambios en el servidor local de AWS...'
+                // Usamos "sudo" para tener permisos de escritura en la carpeta de ubuntu
+                sh "sudo rm -rf /home/ubuntu/Farmacia-San-Jorge/server/dist"
+                sh "sudo cp -r client/dist /home/ubuntu/Farmacia-San-Jorge/server/"
+                sh "cd /home/ubuntu/Farmacia-San-Jorge/server && sudo npm install && sudo pm2 restart all"
             }
         }
     }
