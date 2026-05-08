@@ -126,6 +126,16 @@ const Dashboard = ({ user, token }) => {
             Historial de Facturas
           </Link>
           
+          {(user.rol === 'Regente' || isAdmin) && (
+            <Link 
+              to="/returns"
+              className="flex items-center gap-2 bg-orange-500 text-white px-4 py-2.5 rounded-lg font-bold hover:bg-orange-600 transition-colors shadow-sm text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg>
+              Devoluciones
+            </Link>
+          )}
+
           {isAdmin && (
             <Link 
               to="/metrics"

@@ -146,10 +146,8 @@ function POS({ user, token }) {
         cantidad: item.cantidad
       })),
       metodoPago: paymentMethod,
-      ...(paymentMethod === 'Efectivo' && {
-        montoEntregado: Number(cashReceived),
-        cambio: Number(cashReceived) - grandTotal
-      })
+      montoEntregado: paymentMethod === 'Efectivo' ? Number(cashReceived) : 0,
+      cambio: paymentMethod === 'Efectivo' ? Number(cashReceived) - grandTotal : 0
     };
 
     try {

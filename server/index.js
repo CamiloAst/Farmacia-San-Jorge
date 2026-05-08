@@ -7,6 +7,8 @@ const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
 const metricsRoutes = require('./routes/metrics');
 const salesRoutes = require('./routes/sales');
+const invoiceRoutes = require('./routes/invoices');
+const returnRoutes = require('./routes/returns');
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/metrics', metricsRoutes);
 app.use('/api/sales', salesRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/returns', returnRoutes);
 
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:admin123@farmacia.g5cdshf.mongodb.net/?appName=Farmacia';

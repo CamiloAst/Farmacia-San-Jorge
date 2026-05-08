@@ -8,6 +8,7 @@ import Dashboard from './components/Dashboard';
 import MetricsDashboard from './components/MetricsDashboard';
 import POS from './components/POS';
 import SalesHistory from './components/SalesHistory';
+import Returns from './components/Returns';
 import Logo from './components/Logo';
 
 function App() {
@@ -142,6 +143,10 @@ function App() {
             <Route 
               path="/invoices" 
               element={token && ['Administrador', 'Regente', 'Vendedor'].includes(user?.rol) ? <SalesHistory user={user} token={token} /> : <Navigate to="/dashboard" />} 
+            />
+            <Route 
+              path="/returns" 
+              element={token && ['Administrador', 'Regente'].includes(user?.rol) ? <Returns user={user} token={token} /> : <Navigate to="/dashboard" />} 
             />
             <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
           </Routes>
