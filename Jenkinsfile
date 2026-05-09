@@ -50,10 +50,14 @@ pipeline {
                 echo 'Desplegando cambios en el servidor local de AWS...'
                 // 1. Sincronizamos el Backend asegurando que no sobreescribimos el .env de producción
                 sh "sudo rsync -av --exclude='.env' server/ /home/ubuntu/Farmacia-San-Jorge/server/"
+                sh "sudo chown -R ubuntu:ubuntu /home/ubuntu/Farmacia-San-Jorge/server/"
+
                 
                 // 2. Borramos el frontend viejo y copiamos el nuevo build
                 sh "sudo rm -rf /home/ubuntu/Farmacia-San-Jorge/server/dist"
                 sh "sudo cp -r client/dist /home/ubuntu/Farmacia-San-Jorge/server/"
+
+                
                 
                 // 3. Entramos a la carpeta de producción y reiniciamos PM2
                 sh "sudo su - ubuntu -c 'cd /home/ubuntu/Farmacia-San-Jorge/server && npm install && pm2 restart all'"
