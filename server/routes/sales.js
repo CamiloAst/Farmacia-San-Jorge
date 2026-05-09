@@ -7,12 +7,7 @@ const Metric = require('../models/Metric');
 const auth = require('../middlewares/auth');
 const authorizeRoles = require('../middlewares/roles');
 const { sortFEFO } = require('../utils/fefo');
-
-// Helper to generate Invoice Number
-const generateInvoiceNumber = async () => {
-  const count = await Sale.countDocuments();
-  return `FAC-${String(count + 1).padStart(5, '0')}`;
-};
+const { generateInvoiceNumber } = require('../utils/invoice');
 
 // GET /api/sales/search - Obtener productos agrupados para el panel rápido de venta
 router.get('/search', auth, async (req, res) => {

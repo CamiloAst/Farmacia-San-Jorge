@@ -19,7 +19,9 @@ const saleSchema = new mongoose.Schema({
   cambio: { type: Number, default: 0 },
   fecha: { type: Date, default: Date.now },
   usuarioVendedor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  numeroFactura: { type: String, required: true, unique: true }
+  numeroFactura: { type: String, required: true, unique: true },
+  estado: { type: String, enum: ['Activa', 'Devuelta'], default: 'Activa' },
+  notas: { type: String, default: '' }
 }, { strict: false });
 
 module.exports = mongoose.model('Sale', saleSchema);

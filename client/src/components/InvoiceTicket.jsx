@@ -12,6 +12,12 @@ const InvoiceTicket = forwardRef(({ sale }, ref) => {
         <p className="text-xs text-slate-500">Tel: +57 300 000 0000</p>
       </div>
 
+      {sale.estado === 'Devuelta' && (
+        <div className="bg-red-100 text-red-800 text-center font-bold py-1 mb-4 border border-red-300 uppercase tracking-wider text-xs">
+          FACTURA ANULADA (DEVOLUCIÓN)
+        </div>
+      )}
+
       <div className="border-b border-dashed border-slate-300 pb-3 mb-3">
         <div className="flex justify-between mb-1">
           <span className="font-semibold">Factura:</span>
@@ -83,6 +89,12 @@ const InvoiceTicket = forwardRef(({ sale }, ref) => {
             </>
           )}
         </div>
+        
+        {sale.notas && (
+          <div className="mt-4 p-2 bg-slate-50 border border-slate-200 text-[10px] italic text-slate-600 leading-relaxed">
+            <strong>Nota:</strong> {sale.notas}
+          </div>
+        )}
       </div>
 
       <div className="text-center mt-8 text-xs text-slate-500">

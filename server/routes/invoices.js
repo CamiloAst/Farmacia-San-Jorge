@@ -16,6 +16,10 @@ router.get('/:id', [auth, authorizeRoles('Regente', 'Administrador', 'Vendedor')
       return res.status(404).json({ message: 'Factura no encontrada' });
     }
 
+    if (invoice.estado === 'Devuelta') {
+      return res.status(400).json({ message: 'Esta factura ya fue invalidada por una devolución previa y no puede procesarse nuevamente.' });
+    }
+
     res.json(invoice);
   } catch (err) {
     res.status(500).json({ message: 'Error al buscar la factura', error: err.message });

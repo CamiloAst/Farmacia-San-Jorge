@@ -21,8 +21,7 @@ function Returns({ user }) {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
 
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [returnQuantity, setReturnQuantity] = useState('');
+  const [returnQuantities, setReturnQuantities] = useState({});
   const [returnReason, setReturnReason] = useState('Error de despacho');
 
   const searchInvoice = async () => {
@@ -40,6 +39,7 @@ function Returns({ user }) {
     try {
       const res = await api.get(`/invoices/${invoiceNumber}`);
       setInvoice(res.data);
+      setReturnQuantities({});
     } catch (err) {
       setError(err.response?.data?.message || 'Error buscando factura. Verifique el número.');
     } finally {
@@ -52,49 +52,41 @@ function Returns({ user }) {
     setError(null);
     setSuccessMsg(null);
 
-    if (!selectedProduct || !returnQuantity || returnQuantity <= 0) {
-      setError('Seleccione un producto y una cantidad válida a devolver.');
-      setLoading(false);
-      return;
-    }
+    const itemsToReturn = Object.entries(returnQuantities)
+      .filter(([_, qty]) => qty > 0)
+      .map(([name, qty]) => ({ nombreProducto: name, cantidad: qty }));
 
-    const productInInvoice = invoice.productos.find(p => p.nombreProducto === selectedProduct);
-    if (!productInInvoice) {
-      setError('El producto no pertenece a la factura.');
-      setLoading(false);
-      return;
-    }
-
-    if (returnQuantity > productInInvoice.cantidad) {
-      setError(`La cantidad a devolver no puede superar la cantidad vendida (${productInInvoice.cantidad}).`);
+    if (itemsToReturn.length === 0) {
+      setError('Especifique al menos un producto a devolver con cantidad mayor a 0.');
       setLoading(false);
       return;
     }
 
     const payload = {
       numeroFactura: invoice.numeroFactura,
-      productos: [
-        {
-          nombreProducto: selectedProduct,
-          cantidad: Number(returnQuantity)
-        }
-      ],
+      productos: itemsToReturn,
       motivo: returnReason
     };
 
     try {
       await api.post('/returns', payload);
-      setSuccessMsg(`¡Devolución procesada exitosamente! Se generó Nota Crédito para la factura ${invoice.numeroFactura}.`);
+      setSuccessMsg(res.data.message);
       setInvoice(null);
       setInvoiceNumber('');
-      setSelectedProduct('');
-      setReturnQuantity('');
+      setReturnQuantities({});
       setReturnReason('Error de despacho');
     } catch (err) {
       setError(err.response?.data?.message || 'Error procesando la devolución.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuantityChange = (nombreProducto, val, max) => {
+    let num = Number(val);
+    if (num < 0) num = 0;
+    if (num > max) num = max;
+    setReturnQuantities({ ...returnQuantities, [nombreProducto]: num });
   };
 
   if (!['Administrador', 'Regente'].includes(user?.rol)) {
@@ -165,37 +157,41 @@ function Returns({ user }) {
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Producto a Devolver</label>
-                  <select 
-                    value={selectedProduct}
-                    onChange={(e) => setSelectedProduct(e.target.value)}
-                    className="w-full p-2 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-orange-500 outline-none"
-                  >
-                    <option value="">-- Seleccione un producto --</option>
-                    {invoice.productos.map((prod, idx) => (
-                      <option key={idx} value={prod.nombreProducto}>
-                        {prod.nombreProducto} (Max: {prod.cantidad})
-                      </option>
-                    ))}
-                  </select>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Artículos a Devolver</label>
+                <div className="border rounded-lg overflow-hidden bg-slate-50">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-100 border-b border-slate-200">
+                      <tr>
+                        <th className="p-3">Producto</th>
+                        <th className="p-3 text-center">Comprados</th>
+                        <th className="p-3 text-center">Devolver</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {invoice.productos.map((prod, idx) => (
+                        <tr key={idx} className="bg-white">
+                          <td className="p-3 font-medium text-slate-700">{prod.nombreProducto}</td>
+                          <td className="p-3 text-center font-bold text-slate-600">{prod.cantidad}</td>
+                          <td className="p-3 text-center w-32">
+                            <input 
+                              type="number" 
+                              min="0" 
+                              max={prod.cantidad}
+                              value={returnQuantities[prod.nombreProducto] || ''}
+                              onChange={(e) => handleQuantityChange(prod.nombreProducto, e.target.value, prod.cantidad)}
+                              placeholder="0"
+                              className="w-full p-2 border rounded-md text-center focus:ring-2 focus:ring-orange-500 outline-none text-slate-800 font-semibold"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Cantidad</label>
-                  <input 
-                    type="number"
-                    min="1"
-                    value={returnQuantity}
-                    onChange={(e) => setReturnQuantity(e.target.value)}
-                    placeholder="Cantidad"
-                    className="w-full p-2 border rounded-lg bg-slate-50 focus:ring-2 focus:ring-orange-500 outline-none"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
+              <div className="mb-6">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Motivo de Devolución</label>
                   <select 
                     value={returnReason}
