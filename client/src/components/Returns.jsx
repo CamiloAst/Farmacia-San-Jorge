@@ -208,7 +208,6 @@ function Returns({ user }) {
                     Nota: Los motivos de Merma no aumentan el inventario disponible.
                   </p>
                 </div>
-              </div>
 
               <div className="border-t border-slate-100 pt-6">
                 <button 
