@@ -20,6 +20,6 @@ const saleSchema = new mongoose.Schema({
   fecha: { type: Date, default: Date.now },
   usuarioVendedor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   numeroFactura: { type: String, required: true, unique: true }
-});
+}, { strict: false });
 
 module.exports = mongoose.model('Sale', saleSchema);
