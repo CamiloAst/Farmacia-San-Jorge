@@ -4,8 +4,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 const client = require('prom-client');
-const register = client.register;
-client.collectDefaultMetrics();
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ register: client.register });
 
 const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
@@ -29,12 +29,6 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Prometheus metrics endpoint
-app.get('/metrics', async (req, res) => {
-  res.set('Content-Type', register.contentType);
-  res.end(await register.metrics());
-});
-
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/metrics', metricsRoutes);
@@ -48,16 +42,24 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://admin:admin123@far
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+
+    // Prometheus metrics endpoint
+    app.get('/metrics', async (req, res) => {
+      res.set('Content-Type', client.register.contentType);
+      res.end(await client.register.metrics());
     });
+
     app.use(express.static('dist'));
 
     app.use(function(req, res) {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error('Failed to connect to MongoDB', err);
   });
-  
+
