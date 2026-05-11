@@ -3,6 +3,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+const client = require('prom-client');
+const register = client.register;
+client.collectDefaultMetrics();
+
 const authRoutes = require('./routes/auth');
 const inventoryRoutes = require('./routes/inventory');
 const metricsRoutes = require('./routes/metrics');
@@ -24,6 +28,12 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
