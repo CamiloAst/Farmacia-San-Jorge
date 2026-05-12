@@ -1,15 +1,21 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
+const { MongoMemoryReplSet } = require('mongodb-memory-server');
 
-let mongoServer;
+let replSet;
 
 /**
- * Connect to an in-memory MongoDB instance.
+ * Connect to an in-memory MongoDB **Replica Set**.
+ * A replica set is required because routes/sales.js and routes/returns.js
+ * use Mongoose transactions (session.startTransaction), which only work
+ * on replica set members or mongos — not standalone instances.
+ *
  * Used in beforeAll() of each test suite.
  */
 const connect = async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const uri = mongoServer.getUri();
+  replSet = await MongoMemoryReplSet.create({
+    replSet: { count: 1, storageEngine: 'wiredTiger' }
+  });
+  const uri = replSet.getUri();
   await mongoose.connect(uri);
 };
 
@@ -25,14 +31,14 @@ const clearDatabase = async () => {
 };
 
 /**
- * Disconnect mongoose and stop the in-memory server.
+ * Disconnect mongoose and stop the in-memory replica set.
  * Used in afterAll() of each test suite to prevent open handles.
  */
 const closeDatabase = async () => {
   await mongoose.connection.dropDatabase();
   await mongoose.connection.close();
-  if (mongoServer) {
-    await mongoServer.stop();
+  if (replSet) {
+    await replSet.stop();
   }
 };
 
