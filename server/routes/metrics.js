@@ -51,11 +51,23 @@ router.get('/dashboard', [auth, authorizeRoles('Administrador')], async (req, re
       alerts: item.totalAlerts
     }));
 
+    // 3. Total Sales (sum of all NUEVA_VENTA numericValues)
+    const salesAggregate = await Metric.aggregate([
+      { $match: { metricType: 'NUEVA_VENTA' } },
+      { $group: { _id: null, totalVentas: { $sum: '$numericValue' } } }
+    ]);
+    const totalVentas = salesAggregate.length > 0 ? salesAggregate[0].totalVentas : 0;
+
+    // 4. Shrinkage count (MERMA_DEVOLUCION documents)
+    const conteoMermas = await Metric.countDocuments({ metricType: 'MERMA_DEVOLUCION' });
+
     // Generate Payload
     res.json({
       kpis: {
         receptionIntegrity: Number(receptionIntegrityScore),
-        totalEventsLast30Days: chartData.reduce((acc, curr) => acc + curr.alerts, 0)
+        totalEventsLast30Days: chartData.reduce((acc, curr) => acc + curr.alerts, 0),
+        totalVentas,
+        conteoMermas
       },
       historicalAlerts: chartData
     });

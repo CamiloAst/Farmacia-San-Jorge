@@ -9,7 +9,7 @@ const metricSchema = new mongoose.Schema({
   metricType: { 
     type: String, 
     required: true,
-    enum: ['RECEPCION_TECNICA', 'ALERTA_STOCK', 'ELIMINACION_MFA', 'NUEVA_VENTA']
+    enum: ['RECEPCION_TECNICA', 'ALERTA_STOCK', 'ELIMINACION_MFA', 'NUEVA_VENTA', 'MERMA_DEVOLUCION']
   },
   status: { 
     type: String, 
