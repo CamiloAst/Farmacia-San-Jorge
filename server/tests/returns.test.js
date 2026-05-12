@@ -11,7 +11,7 @@ const Metric = require('../models/Metric');
 
 // Mock Middlewares
 jest.mock('../middlewares/auth', () => (req, res, next) => {
-  req.user = { id: new mongoose.Types.ObjectId().toString(), email: 'regente@farmacia.com', rol: 'Administrador' };
+  req.user = { id: '60d21b4667d0d8992e610c85', email: 'regente@farmacia.com', rol: 'Administrador' };
   next();
 });
 

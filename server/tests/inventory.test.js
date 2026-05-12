@@ -9,7 +9,7 @@ const Metric = require('../models/Metric');
 
 // Mock Middlewares (auth and roles) — bypass authentication for testing
 jest.mock('../middlewares/auth', () => (req, res, next) => {
-  req.user = { id: new mongoose.Types.ObjectId().toString(), email: 'test@farmacia.com', rol: 'Administrador' };
+  req.user = { id: '60d21b4667d0d8992e610c85', email: 'test@farmacia.com', rol: 'Administrador' };
   next();
 });
 
