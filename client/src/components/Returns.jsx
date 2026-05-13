@@ -69,7 +69,7 @@ function Returns({ user }) {
     };
 
     try {
-      await api.post('/returns', payload);
+      const res = await api.post('/returns', payload);
       setSuccessMsg(res.data.message);
       setInvoice(null);
       setInvoiceNumber('');

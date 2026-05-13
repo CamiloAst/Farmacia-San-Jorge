@@ -28,8 +28,8 @@ pipeline {
                 dir('server') {
                     echo 'Instalando dependencias del Backend...'
                     sh 'npm install'
-                    echo 'Ejecutando pruebas unitarias de Jest...'
-                    // sh 'npm test' // Descomentar cuando tengas los archivos .test.js listos
+                    echo 'Ejecutando pruebas unitarias e integración (Jest)...'
+                    sh 'npm test -- --verbose'
                 }
             }
         }
